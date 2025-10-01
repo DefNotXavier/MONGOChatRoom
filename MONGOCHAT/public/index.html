@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <link
+      rel="stylesheet"
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+      integrity="sha384-Gn5384xqQ1aoWXA+058R+I7gJ8y5g5z5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5e5"
+      crossorigin="anonymous"
+    />
+    <link rel="stylesheet" href="index.css" />
+    <!-- I manually set the height of the caht history window here-->
+    <style>
+      #messages {
+        height: 300px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>ONLINE CHAT ROOM</h1>
+    <!-- This acive users count dynamically gets changed based of of the id-->
+    <h2 id="active-users">Active Users: 0</h2>
+    <div class="container">
+      <div class="row">
+        <div class="col-md-6 offset-md-3 col-sm-12">
+          <div id="status"></div>
+          <div id="chat">
+            <br />
+            <div class="card">
+              <div class="chat-header">
+                Chat Log
+                <button class="noselect" id="clear" aria-label="Clear chat">
+                  <span class="text">Delete</span>
+                  <span class="icon">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        d="M24 20.188l-8.315-8.209 8.2-8.282-3.697-3.697-8.212 8.318-8.31-8.203-3.666 3.666 8.321 8.24-8.206 8.313 3.666 3.666 8.237-8.318 8.285 8.203z"
+                      />
+                    </svg>
+                  </span>
+                </button>
+              </div>
+              <!-- This is where the actual chat window is-->
+              <div class="chat-window">
+                <ul class="message-list" id="messages"></ul>
+              </div>
+              <!-- Basically I use the id here to get the username-->
+              <div class="chat-input">
+                <input
+                  type="value"
+                  required=""
+                  id="username"
+                  placeholder="Type your username here"
+                />
+              </div>
+              <!-- Message input and send button in same flex container -->
+              <div class="chat-input">
+                <input
+                  type="text"
+                  id="textarea"
+                  class="message-input"
+                  placeholder="Type your message here"
+                />
+                <button class="arrow" id="send" aria-label="Send">
+                  <span class="arrow-top"></span>
+                  <span class="arrow-bottom"></span>
+                </button>
+              </div>
+            </div>
+            <br />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.js"></script>
+
+    <script>
+      (function () {
+        // function to get ellme nts by id
+        var element = function (id) {
+          return document.getElementById(id);
+        };
+
+        // Get all Elements by id
+        var status = element("status");
+        var messages = element("messages");
+        var textarea = element("textarea");
+        var username = element("username");
+        var clearBtn = element("clear");
+        var sendBtn = element("send");
+
+        // Set default status
+        var statusDefault = status.textContent;
+
+        var setStatus = function (s) {
+          // Set status
+          status.textContent = s;
+          if (s !== statusDefault) {
+            var delay = setTimeout(function () {
+              setStatus(statusDefault);
+            }, 4000);
+          }
+        };
+
+        // connects to the webapge
+        var socket = io.connect();
+
+        // Check for connection
+        if (socket !== undefined) {
+          console.log("Connected to socket...");
+
+          // Listen for activeUsers event to get number of users
+          // set active users count to 0
+          var activeUsersCount = 0; //
+
+          // updates active users absed of when a server broadcasts it
+          socket.on("activeUsers", function (count) {
+            activeUsersCount = count;
+            console.log("Active users:", activeUsersCount);
+            document.getElementById(
+              "active-users"
+            ).textContent = `Active Users: ${activeUsersCount}`;
+          });
+
+          // Display messsage history sreviced from sever. When somone sends a message, you see it pop up in messages
+          socket.on("output", function (data) {
+            //console.log(data);
+            if (data.length) {
+              for (var x = 0; x < data.length; x++) {
+                // Build out message div
+                var message = document.createElement("div");
+                message.setAttribute("class", "chat-message");
+                message.textContent = data[x].name + ": " + data[x].message;
+                messages.appendChild(message);
+                messages.insertBefore(message, messages.firstChild);
+              }
+            }
+          });
+
+          // Get Status From Server
+          socket.on("status", function (data) {
+            // get message status
+            setStatus(typeof data === "object" ? data.message : data);
+
+            // If status is clear, clear text
+            if (data.clear) {
+              textarea.value = "";
+            }
+          });
+
+          // Function to "send" when enter key is pressed
+          textarea.addEventListener("keydown", function (event) {
+            if (event.which === 13 && event.shiftKey == false) {
+              console.log("Sending message:", username.value, textarea.value);
+              // Emit to server input
+              socket.emit("input", {
+                name: username.value,
+                message: textarea.value,
+              });
+              // Clear textarea after sending
+              textarea.value = "";
+
+              event.preventDefault();
+            }
+          });
+
+          // Function to "send" when button is clicked
+          sendBtn.addEventListener("click", function () {
+            if (username.value && textarea.value.trim()) {
+              console.log("Sending message:", username.value, textarea.value);
+              // Emit to server input
+              socket.emit("input", {
+                name: username.value,
+                message: textarea.value,
+              });
+              // Clear textarea after sending
+              textarea.value = "";
+            }
+          });
+
+          // Handle Chat Clear this clears messages list
+          clearBtn.addEventListener("click", function () {
+            socket.emit("clear");
+          });
+
+          // Clear Message
+          socket.on("cleared", function () {
+            messages.textContent = "";
+          });
+        }
+      })();
+    </script>
+  </body>
+</html>
