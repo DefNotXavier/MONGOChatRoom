@@ -1,18 +1,34 @@
-# FREE Online Chat Room
+# Paper Chat
 
-The online chat room is a web-based application that allows multiple users to connect, send messages, and view a shared chat history in real time. Each message is stored as JSON with keys for the user's name and their message. The frontend is built with HTML/CSS/JavaScript and hosted for free on GitHub Pages, and Firebase Realtime Database stores the messages and pushes new ones to everyone instantly. The application displays the number of active users and the most recent messages.
+A real-time chat room that looks like a sheet of lined notebook paper. Open the page, pick a name, and start talking. Everyone on the site sees new messages instantly, along with a live count of who's online.
 
-Messages are **automatically deleted every 24 hours** by a GitHub Action that clears the chat at midnight UTC.
+There's no backend server to run or pay for. The site is static files on GitHub Pages, and Firebase Realtime Database stores the messages and pushes them to every open browser. A GitHub Action clears the chat every night at midnight UTC, so it starts fresh each day.
 
-**Live site:** https://defnotxavier.github.io/MONGOChatRoom/
+**Live site:** https://defnotxavier.github.io/paper-chat/
 
 ![Tool: Firebase](https://img.shields.io/badge/Tool-Firebase-orange)
-
 ![Hosting: GitHub Pages](https://img.shields.io/badge/Hosting-GitHub_Pages-blue)
-
 ![Language: JavaScript](https://img.shields.io/badge/Language-Javascript-yellow)
 
-## How It Works
+## Features
+
+- **Real-time messages**: new messages appear for everyone the moment they're sent, with no refresh.
+- **Live active-user count**: each open tab registers itself, and Firebase removes it automatically when the tab closes.
+- **Daily wipe**: a scheduled GitHub Action deletes all messages at midnight UTC. As a backup, the page only shows messages from the last 24 hours.
+- **Locked-down database**: security rules allow anyone to read and post, but nobody can edit or delete messages from the browser, and names/messages are capped at 32/500 characters.
+- **$0 to run**: GitHub Pages and Firebase's free tier cover everything.
+
+## Architecture
+
+```
+Browser (GitHub Pages)  <── live updates ──>  Firebase Realtime Database
+   index.html                                    /messages   (chat history)
+   firebase-config.js                            /presence   (who's online)
+                                                      ▲
+GitHub Action (daily, midnight UTC) ── deletes ───────┘ /messages
+```
+
+## Project Structure
 
 - `public/` is the website. GitHub Pages serves it, and there is no server to run.
 - `public/firebase-config.js` tells the page which Firebase database to use.
@@ -42,7 +58,7 @@ Messages are **automatically deleted every 24 hours** by a GitHub Action that cl
 
 1. In this repo on GitHub go to **Settings > Pages**, and under **Source** pick **GitHub Actions**.
 2. Push your changes to `main`. The **Deploy to GitHub Pages** action publishes the site.
-3. Open https://defnotxavier.github.io/MONGOChatRoom/ and share the link with anyone.
+3. Open https://defnotxavier.github.io/paper-chat/ and share the link with anyone.
 
 ## Testing Locally
 
@@ -72,6 +88,10 @@ Then open the URL it prints. It uses the same Firebase database as the live site
 ## Authors ✍️
 
 - **Xavier Guinness Stout**
+
+## License
+
+MIT, see [LICENSE](LICENSE). If you fork this, swap in your own Firebase project in `public/firebase-config.js` so your copy doesn't share this chat's database.
 
 ## Acknowledgments 🙌
 
