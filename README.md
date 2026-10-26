@@ -1,124 +1,73 @@
-# FREE Local Host Online Chat Room
+# FREE Online Chat Room
 
-The online chat room is a web-based application that allows multiple users to connect, send messages, and view a shared chat history in real time. It functions as a key-value pair chat room, where each message is stored in JSON format with keys for the user’s name and their message. The frontend is built with HTML/CSS, while JavaScript with Socket.IO handles real-time communication. The backend uses Node.js with MongoDB to store the chat data. The application displays the number of active users and supports features like sending messages, clearing the chat log, and viewing recent messages.
+The online chat room is a web-based application that allows multiple users to connect, send messages, and view a shared chat history in real time. Each message is stored as JSON with keys for the user's name and their message. The frontend is built with HTML/CSS/JavaScript and hosted for free on GitHub Pages, and Firebase Realtime Database stores the messages and pushes new ones to everyone instantly. The application displays the number of active users and the most recent messages.
 
-![Tool: Socket.io](https://img.shields.io/badge/Tool-Socket.IO-green)
+Messages are **automatically deleted every 24 hours** by a GitHub Action that clears the chat at midnight UTC.
 
-![Language: Python](https://img.shields.io/badge/Language-Python-green)
+**Live site:** https://defnotxavier.github.io/MONGOChatRoom/
+
+![Tool: Firebase](https://img.shields.io/badge/Tool-Firebase-orange)
+
+![Hosting: GitHub Pages](https://img.shields.io/badge/Hosting-GitHub_Pages-blue)
 
 ![Language: JavaScript](https://img.shields.io/badge/Language-Javascript-yellow)
 
-## Prerequisites
+## How It Works
 
-- **Node.js and npm**: Ensure Node.js is installed. Download from [nodejs.org](https://nodejs.org) if needed.
-- **MongoDB Atlas Account**: Sign up and create a `FREE` cluster at :
+- `public/` is the website. GitHub Pages serves it, and there is no server to run.
+- `public/firebase-config.js` tells the page which Firebase database to use.
+- `database.rules.json` is the security rules for the database. Anyone can read and send messages, but nobody can edit or delete them from the browser, and names/messages are limited to 32/500 characters.
+- `.github/workflows/clear-chat.yml` runs every day and deletes all messages.
+- `.github/workflows/pages.yml` publishes `public/` to GitHub Pages whenever it changes.
 
-  - [mongodb.com](https://www.mongodb.com)
+## Step 1: Set Up Firebase (free)
 
-- **VS Code**: Install Visual Studio Code and extenstion:
-  - [MongoDB for VS Code](https://marketplace.visualstudio.com/items?itemName=mongodb.mongodb-vscode)
+1. **Create a project**: Go to [console.firebase.google.com](https://console.firebase.google.com), click **Create a project**, give it a name, and you can turn off Google Analytics.
+2. **Create the database**: In the left menu go to **Build > Realtime Database > Create Database**. Pick a location and choose **Start in locked mode**.
+3. **Add the security rules**: In the Realtime Database page, open the **Rules** tab, replace everything with the contents of `database.rules.json`, and click **Publish**.
+4. **Get the web config**: Go to **Project settings** (gear icon) > **General** > **Your apps**, click the web icon `</>`, register an app (no hosting needed), and copy the `firebaseConfig` values into `public/firebase-config.js`.
+   - Make sure `databaseURL` is filled in. If it's missing, copy the URL shown at the top of the Realtime Database **Data** tab.
+   - These values are meant to be public, so it's fine to commit them.
 
-## Step 1: Set Up MongoDB Cluster
+## Step 2: Set Up the Daily Clear
 
-1. **Create a MongoDB Atlas Cluster**:
+1. **Make a key for GitHub**: In Firebase go to **Project settings > Service accounts** and click **Generate new private key**. A `.json` file downloads.
+2. **Add GitHub secrets**: In this repo on GitHub go to **Settings > Secrets and variables > Actions > New repository secret** and add:
+   - `FIREBASE_SERVICE_ACCOUNT`: paste the **entire contents** of the downloaded `.json` file.
+   - `FIREBASE_DATABASE_URL`: the same `databaseURL` from Step 1.
+3. **Delete the downloaded `.json` file** afterwards. It's a password to your database, so never commit it.
+4. **Test it**: Go to the **Actions** tab > **Clear chat** > **Run workflow**. It should go green and the chat should empty.
 
-   - Log in to your MongoDB Atlas account at [mongodb.com](https://www.mongodb.com).
-   - Create a new cluster (In code its called `Cluster0`, if you do something different modifiy that value).
-   - Configure the cluster settings (use the `FREE` tier for testing).
-   - Add your IP address to the cluster's IP whitelist (Network Access > Add IP Address > Allow access from anywhere for testing).
-   - Create a database user (Database Access > Add New Database User) with a username and `password`, remeber password, will be used with Connection String .
+## Step 3: Turn On GitHub Pages
 
-2. **Get the MongoDB Connection String**:
+1. In this repo on GitHub go to **Settings > Pages**, and under **Source** pick **GitHub Actions**.
+2. Push your changes to `main`. The **Deploy to GitHub Pages** action publishes the site.
+3. Open https://defnotxavier.github.io/MONGOChatRoom/ and share the link with anyone.
 
-   - In MongoDB Atlas, go to your cluster and click **Connect**.
-   - Choose MongoDB for VS Code
-   - Copy the connection string.
-   - Store this string in a `.env` file in your project directory.
-   - replace `<db_password>` with database user password from above.
+## Testing Locally
 
-3. **Connect to the Cluster INSIDE VS CODE**:
+The page uses JavaScript modules, so it has to be served rather than opened as a file. From the repo folder run:
 
-   - Open VS Code and ensure the MongoDB for VS Code extension is installed and Enabled.
-   - click `Control + SHIFT + P` to open up Command Palette
-   - Search for `MongoDB: Connect with Connection String`
+```bash
+npx serve public
+```
 
-   - If connection failed, pop up will show alerting you.
-
-## Step 2: Set Up the Chat Application
-
-1. **Clone or Set Up the Project**:
-
-   - Ensure you have the following files in your project directory:
-     - `index.html`: The frontend for the chat room.
-     - `index.css`: Styles for the chat interface.
-     - `server.js`: The backend server code using Express and Socket.IO.
-     - `.env`: Contains your MongoDB connection string.
-
-2. **Install Dependencies**:
-
-   - Open a terminal in your project directory.
-   - Run the following command to install required Node.js packages:
-
-     ```python
-     npm install express mongoose socket.io dotenv
-     ```
-
-3. **Start the Application**:
-
-   - In the terminal, run:
-
-     ```bash
-     npm start
-     ```
-
-   - or under `NPM SCRIPTS` in bottom left, click `start`
-
-   - You should see `Server listening on port 5000` and `MongoDB connected...` in the terminal, indicating the server is running.
-
-4. **Test the Application**:
-
-   - Open a web browser and navigate to `http://localhost:5000`.
-   - The chat room interface should load, showing "Active Users: 1" (yourself) and an empty chat log.
-
-5. **Stop the Application**:
-   - To stop the server, press `Ctrl + C` twice in the terminal.
-
-## Step 3: Share the (Local) Application with Friends
-
-To allow friends on the same network to access the chat room:
-
-1. **Find Your Local IP Address**:
-
-   - On Windows:
-     - Press `Win + R`, type `cmd`, and press Enter.
-     - In the command prompt, type `ipconfig` and press Enter.
-     - Look for the `IPv4 Address` under your active network adapter (e.g., `192.163.1.400`).
-
-2. **Share the URL**:
-
-   - Provide your friends with the URL in the format: `http://<Your-IPv4-Address>:5000/` .
-   - Note: All users must be on the same network/Wi-fi.
-
-3. **Test the Connection**:
-   - Have your friend open the URL in their browser.
-   - They should see the chat room interface, and Active User Count increase and be able to send messages, which will appear for all connected users.
+Then open the URL it prints. It uses the same Firebase database as the live site.
 
 ## Troubleshooting
 
-- **MongoDB Connection Issues**:
+- **Messages don't send / "Message failed to send"**:
 
-  - Ensure your `.env` file contains the correct `MONGO_URI`.
-  - Ensure database user `password` is correct.
-  - Verify your IP is whitelisted in MongoDB Atlas or add `0.0,0.0/0` to allow access anywhere
+  - Check that `public/firebase-config.js` has your real values, including `databaseURL`.
+  - Check that the rules from `database.rules.json` are published in the Firebase console.
+  - Open the browser console (F12) for the exact error.
 
-- **Server Not Running**:
+- **Clear chat action fails**:
 
-  - Confirm all dependencies are installed (`npm install`).
-  - Check for errors in the terminal when running `npm start`.
+  - Make sure both secrets are set and `FIREBASE_SERVICE_ACCOUNT` contains the whole JSON file.
 
-- **Friends Can't Connect**:
-  - Ensure everyone is on the same network.
-  - Verify your IPv4 address is correct.
+- **Clear chat stopped running**:
+  - GitHub pauses scheduled actions in repos with no activity for 60 days and emails you. Re-enable it from the **Actions** tab. Even while it's paused, the page only shows messages from the last 24 hours.
 
 ## Authors ✍️
 

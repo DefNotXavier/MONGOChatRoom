@@ -1,0 +1,31 @@
+{
+  "rules": {
+    "messages": {
+      ".read": true,
+      ".indexOn": ["createdAt"],
+      "$messageId": {
+        ".write": "!data.exists() && newData.exists()",
+        ".validate": "newData.hasChildren(['name', 'message', 'createdAt'])",
+        "name": {
+          ".validate": "newData.isString() && newData.val().length <= 32 && newData.val().matches(/[^ ]/)"
+        },
+        "message": {
+          ".validate": "newData.isString() && newData.val().length <= 500 && newData.val().matches(/[^ ]/)"
+        },
+        "createdAt": {
+          ".validate": "newData.val() === now"
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    },
+    "presence": {
+      ".read": true,
+      "$connectionId": {
+        ".write": true,
+        ".validate": "newData.val() === true"
+      }
+    }
+  }
+}
