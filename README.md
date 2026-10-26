@@ -70,31 +70,10 @@ npx serve public
 
 Then open the URL it prints. It uses the same Firebase database as the live site.
 
-## Troubleshooting
-
-- **Messages don't send / "Message failed to send"**:
-
-  - Check that `public/firebase-config.js` has your real values, including `databaseURL`.
-  - Check that the rules from `database.rules.json` are published in the Firebase console.
-  - Open the browser console (F12) for the exact error.
-
-- **Clear chat action fails**:
-
-  - Make sure both secrets are set and `FIREBASE_SERVICE_ACCOUNT` contains the whole JSON file.
-
-- **Clear chat stopped running**:
-  - GitHub pauses scheduled actions in repos with no activity for 60 days and emails you. Re-enable it from the **Actions** tab. Even while it's paused, the page only shows messages from the last 24 hours.
-
-## Authors ✍️
+## Authors
 
 - **Xavier Guinness Stout**
 
 ## License
 
 MIT, see [LICENSE](LICENSE). If you fork this, swap in your own Firebase project in `public/firebase-config.js` so your copy doesn't share this chat's database.
-
-## Acknowledgments 🙌
-
-This project was inspired by the following resources:
-
-- **Tutorial Video**: [YouTube tutorial](https://www.youtube.com/watch?v=8Y6mWhcdSUM) for a visual guide on setting up a similar chat application.
